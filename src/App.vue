@@ -5,9 +5,6 @@
 
 import { ref, onMounted } from 'vue'
 
-// reactive state
-const count = ref(0)
-
 export default {
   data() {
     return { 
@@ -42,7 +39,13 @@ export default {
 ],
     wall: 'wall',
     floor: 'floor',
-    possibleDoorways: []
+    possibleDoorways: [],
+    doorways: 3,
+    roomDensity: 100,
+    minHeight: 3,
+    maxHeight: 10,
+    minWidth: 3,
+    maxWidth: 10
       }
 
   }, methods: {
@@ -50,8 +53,11 @@ export default {
   this.resetMap()
   this.generateRooms()
   this.corridorPlacable()
+
   this.placeDoors()
   this.removeDeadends()
+  // this.resetMap()
+
 },
 
  resetMap()
@@ -71,7 +77,7 @@ export default {
 
  generateRooms()
 {
-  for (let i= 0; i < 100; i++)
+  for (let i= 0; i < this.roomDensity; i++)
 	{
 		const startingPoint = [
       Math.floor(Math.random() * this.map.length),
@@ -79,9 +85,9 @@ export default {
       ]
       let roomDoorways = []
 
-        const height = (Math.floor(Math.random() * 5) + 5)
-        const width = (Math.floor(Math.random() * 5) + 5)
-        
+        const height = (Math.floor(Math.random()  * (this.maxHeight - this.minHeight + 1) + this.minHeight )) + 2
+        const width = (Math.floor(Math.random() * (this.maxWidth - this.minWidth + 1) + this.minWidth )) + 2
+
         if(height + startingPoint[0] > this.map.length -1 || width + startingPoint[1] > this.map[0].length -1 || startingPoint[0] < 3 || startingPoint[1] < 3)
         {
           continue;
@@ -208,7 +214,7 @@ placeDoors()
   for (let i = 0; i < this.possibleDoorways.length; i++) {
     let doors = 0
 
-    while(doors < 3)
+    while( doors < this.doorways)
     {
       let doorway = this.possibleDoorways[i][Math.floor(Math.random() * this.possibleDoorways[i].length -1) + 1]
 
@@ -232,33 +238,32 @@ placeDoors()
   }
 },
 
-removeDeadends()
-{
-  for (let i = 1; i < this.map.length -1; i++) {
-      for (let j = 1; j < this.map[0].length -1; j++) {
-        if(this.map[i][j] == 'o'){
-          let floors = []
-          let north = this.map[i -1][j] == 'w' ? 1 : 0;
-          if(north == 0) {floors.push([i -1,j])}
-          let east = this.map[i][j +1] == 'w' ? 1 : 0;
-          if(east == 0) {floors.push([i,j +1])}
-          let south = this.map[i+1][j] == 'w' ? 1 : 0;
-          if(south == 0) {floors.push([i+1,j])}
-          let west = this.map[i ][j-1] == 'w' ? 1 : 0;
-          if(west == 0) {floors.push([i ,j-1])}
+  removeDeadends()
+  {
+    for (let i = 1; i < this.map.length -1; i++) {
+        for (let j = 1; j < this.map[0].length -1; j++) {
+          if(this.map[i][j] == 'o' || this.map[i][j] == 'd'){
+            let floors = []
+            let north = this.map[i -1][j] == 'w' ? 1 : 0;
+            if(north == 0) {floors.push([i -1,j])}
+            let east = this.map[i][j +1] == 'w' ? 1 : 0;
+            if(east == 0) {floors.push([i,j +1])}
+            let south = this.map[i+1][j] == 'w' ? 1 : 0;
+            if(south == 0) {floors.push([i+1,j])}
+            let west = this.map[i ][j-1] == 'w' ? 1 : 0;
+            if(west == 0) {floors.push([i ,j-1])}
 
-          let sum = north + east + south + west
-
-          if(sum >= 3)
-          {
-            this.map[i][j] = 'w'
-            i = 1
-            j = 1
+            let sum = north + east + south + west
+            if(sum >= 3)
+            {
+              this.map[i][j] = 'w'
+              i = 1
+              j = 0
             }
           }
+        }
       }
     }
-  }
 }
 }
 
@@ -279,7 +284,31 @@ removeDeadends()
     <!-- </div> --> 
   <!-- </header> -->
   <div>
-  <button @click="generateDungeon">Generate Dungeon</button>
+    <label for="roomDensity">Room Density:</label>
+    <input type="range" v-model.number="this.roomDensity" id="roomDensity" name="roomDensity" min="100" max="1000"/>
+
+    <label for="minHeight">Room Minumum Height:</label>
+    <input type="range" v-model.number="this.minHeight" id="minHeight" name="minHeight" min="1" max="10" oninput="num1.value = this.value"/>
+    <output id="num1">3</output>
+
+    <label for="maxHeight">Room Max Height:</label>
+    <input type="range" v-model.number="this.maxHeight" id="maxHeight" name="maxHeight" min="1" max="10" oninput="num2.value = this.value"/>
+    <output id="num2">10</output>
+
+    <label for="minWidth">Room Minumum Width:</label>
+    <input type="range" v-model.number="this.minWidth" id="minWidth" name="minWidth" min="1" max="10" oninput="num3.value = this.value"/>
+    <output id="num3">3</output>
+
+    <label for="maxWidth">Room Max Width:</label>
+    <input type="range" v-model.number="this.maxWidth" id="maxWidth" name="maxWidth" min="1" max="10" oninput="num4.value = this.value"/>
+    <output id="num4">10</output>
+
+    <label for="doorways">Max Doorways:</label>
+    <input type="range" v-model.number="this.doorways" id="doorways" name="doorways" min="1" max="10" oninput="num5.value = this.value"/>
+    <output id="num5">3</output>
+    <button @click="generateDungeon">Generate Dungeon</button>
+
+
   <tr>
     <td v-for="item in this.map">
       <span v-for="char in item">
